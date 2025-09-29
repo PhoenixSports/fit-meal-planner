@@ -60,7 +60,14 @@
         // --- CONFIG AND CONSTANTS ---
         // Global variables provided by the Canvas environment (must be accessed globally)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const firebaseConfig = {
+            apiKey: "AIzaSyC...", // Placeholder, will not affect deployment
+            authDomain: "fit-meal-planner-03458607.firebaseapp.com",
+            projectId: "fit-meal-planner-03458607", // <-- YOUR PROJECT ID ADDED HERE
+            storageBucket: "fit-meal-planner-03458607.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:a0b1c2d3e4f5g6h7i8j9k0"
+        };
         const apiKey = ""; // Gemini API Key is provided by the runtime environment
 
         // Helper to handle exponential backoff for API calls
@@ -1207,6 +1214,12 @@
 
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
+    <!-- Include Firebase SDKs after the React code, using UMD bundles -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</body>
+</html>
     <!-- Include Firebase SDKs after the React code, using UMD bundles -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
