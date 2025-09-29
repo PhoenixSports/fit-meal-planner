@@ -1,14 +1,1215 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F.I.T. Meal Planner</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load React and Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom Scrollbar for better UX (Phoenix Colors) */
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 8px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background-color: #8B5CF6; /* Purple */
+            border-radius: 10px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: #1f2937; /* Dark Gray */
+        }
+    </style>
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- LUCIDE ICON DEFINITIONS (manually defining necessary icons since we can't import them via ESM) ---
+        const Utensils = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h3l7.39 12.32a.72.72 0 0 1-.39.92l-.12.08a.71.71 0 0 1-.58.07L3 17"></path><path d="M16 16v3a2 2 a2 0 0 0 2 2h0a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-0a2 2 0 0 0-2 2z"></path><path d="M20 3v3a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-0a2 2 0 0 0-2 2z"></path></svg>;
+        const ListTodo = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="6" height="6" rx="1"></rect><path d="M3 17h18"></path><path d="M3 11h18"></path><path d="M3 5h18"></path></svg>;
+        const Goal = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 10a2 2 0 0 0-2 2a2 2 0 0 0 2 2a2 2 0 0 0 2-2a2 2 0 0 0-2-2z"></path><path d="M12 2v2"></path><path d="M22 12h-2"></path><path d="M4 12H2"></path><path d="M12 20v2"></path><path d="M16 16l1.41 1.41"></path><path d="M6.59 17.41L8 16"></path><path d="M16 8l1.41-1.41"></path><path d="M6.59 6.59L8 8"></path></svg>;
+        const Plus = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>;
+        const X = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>;
+        const Loader2 = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.21-8.54"></path></svg>;
+        const Heart = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.23 3-5.5a5.5 5.5 0 0 0-5.5-5.5c-1.57 0-3.36.8-4.5 2.5A5.5 5.5 0 0 0 4 3.5a5.5 5.5 0 0 0-5.5 5.5c0 2.27 1.5 4.04 3 5.5l7 7Z"></path></svg>;
+        const Clock = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>;
+        const Zap = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>;
+        const Soup = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 15h11"></path><path d="M12 18v3"></path><path d="M7 21h10"></path><path d="M19 8c0 4.2-3.3 6-5.5 6H12c-2.2 0-5.5-1.8-5.5-6C6.5 3.8 11 2 12 2c1 0 5.5 1.8 5.5 6z"></path></svg>;
+        const Package = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16.5 9.4l-3.3 3.3a2 2 0 0 1-2.8 0L6.5 9.4"></path><path d="M10 18H5.5a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2H18.5a2 2 0 0 1 2 2V10"></path><path d="M13 10V3.5a1.5 1.5 0 0 0-3 0V10"></path><path d="M10 10h4"></path></svg>;
+        const Scale = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 17H2"></path><path d="M16 17a5 5 0 0 0-10 0"></path><path d="M12 10V5"></path><path d="M5 10l-3 7"></path><path d="M19 10l3 7"></path><path d="M8 7H16"></path></svg>;
+        const Settings = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"></path><path d="M12.22 18h-.44a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2V20a2 2 0 0 0-2-2z"></path><path d="M22 12.22v-.44a2 2 0 0 0-2-2h-.44a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2H20a2 2 0 0 0 2-2z"></path><path d="M4 12.22v-.44a2 2 0 0 0-2-2H.44a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2H4a2 2 0 0 0 2-2z"></path></svg>;
+        const Ban = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M4.22 4.22L19.78 19.78"></path></svg>;
+        const History = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M20 12h2"></path><path d="M2 12h2"></path><path d="M18.36 5.64l-1.41 1.41"></path><path d="M7.05 17.66l-1.41 1.41"></path><path d="M12 12L16 10"></path><path d="M10 12L8 8"></path></svg>;
+        
+        // --- FIREBASE IMPORTS (using modular UMD syntax) ---
+        // We use the compat library, so access functions directly off the global firebase object
+        const { initializeApp } = firebase;
+        
+        // --- NOTE: We will access AUTH and FIRESTORE functions via the initialized app instance (app.firestore(), app.auth()) 
+        // to ensure compatibility with the UMD bundles. ---
+        
+        // Corrected usage of React hooks (must be accessed via the global React object)
+        const { useState, useEffect, useCallback, useMemo } = React;
+
+
+        // --- CONFIG AND CONSTANTS ---
+        // Global variables provided by the Canvas environment (must be accessed globally)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const apiKey = ""; // Gemini API Key is provided by the runtime environment
+
+        // Helper to handle exponential backoff for API calls
+        const fetchWithBackoff = async (url, options, retries = 5, delay = 1000) => {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response;
+            } catch (error) {
+                if (retries === 0) throw error;
+                console.warn(`Request failed, retrying in ${delay / 1000}s...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return fetchWithBackoff(url, options, retries - 1, delay * 2);
+            }
+        };
+
+        // --- DEDICATED COMPONENTS FOR STABILITY ---
+        const INGREDIENT_SUGGESTIONS = [
+            "Apples", "Asparagus", "Avocado", "Bacon", "Bananas", 
+            "Beef sirloin", "Bell peppers (red/green/yellow)", "Black beans", "Blueberries", 
+            "Bread", "Broccoli", "Butter", "Carrots", "Cauliflower", 
+            "Celery", "Cheddar cheese", "Chicken breast", "Chicken thighs", "Chickpeas", 
+            "Corn", "Eggs", "Feta cheese", "Flour", "Garlic", 
+            "Grapefruit", "Grapes", "Ground beef", "Ground turkey", "Kale", 
+            "Lemon", "Lentils", "Lettuce (romaine/iceberg)", "Lime", "Melons (various)", 
+            "Milk", "Mushrooms", "Olive oil", "Onion", "Oranges", 
+            "Pasta (penne/spaghetti)", "Peaches", "Peas", "Pepper", "Plums", 
+            "Pork chops", "Pork shoulder", "Potatoes", "Raspberries", 
+            "Rice (white/brown)", "Salmon fillet", "Salt", "Sausage", "Spinach", 
+            "Strawberries", "Sugar", "Sweet potato", "Tofu", "Tomato", 
+            "Tortillas", "Tuna (canned)", "Turkey breast", "White potato", "Yogurt (plain)", 
+            "Zucchini"
+        ];
+
+        const PantryInputWithAutocomplete = React.memo(({ onAddItem }) => {
+            const [inputValue, setInputValue] = useState(''); 
+            const [suggestions, setSuggestions] = useState([]);
+            const [showSuggestions, setShowSuggestions] = useState(false);
+
+            useEffect(() => {
+                if (inputValue.length > 1) {
+                    const filtered = INGREDIENT_SUGGESTIONS.filter(item => {
+                        const parts = inputValue.split(',').map(s => s.trim());
+                        const searchName = parts.length > 1 ? parts[1] : parts[0];
+                        return item.toLowerCase().includes(searchName.toLowerCase());
+                    }).slice(0, 5);
+                    setSuggestions(filtered);
+                    setShowSuggestions(filtered.length > 0);
+                } else {
+                    setSuggestions([]);
+                    setShowSuggestions(false);
+                }
+            }, [inputValue]);
+
+            const handleInputSubmit = (e) => {
+                e.preventDefault();
+                if (inputValue.trim()) {
+                    onAddItem(inputValue.trim());
+                    setInputValue('');
+                    setShowSuggestions(false);
+                }
+            };
+
+            const handleSuggestionClick = (suggestion) => {
+                const parts = inputValue.split(',').map(s => s.trim());
+                let newInputValue;
+
+                if (parts.length > 1) {
+                    newInputValue = `${parts[0].trim()}, ${suggestion.toLowerCase()}`;
+                } else {
+                    newInputValue = suggestion.toLowerCase();
+                }
+                
+                setInputValue(newInputValue); 
+                setShowSuggestions(false);
+            };
+            
+            const handleBlur = () => {
+                setTimeout(() => setShowSuggestions(false), 200); 
+            };
+
+            return (
+                <form onSubmit={handleInputSubmit} className="flex space-x-2 relative">
+                    <input
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onFocus={() => inputValue.length > 1 && suggestions.length > 0 && setShowSuggestions(true)}
+                        onBlur={handleBlur}
+                        placeholder="QTY, ITEM (e.g., 12, eggs)"
+                        className="flex-grow p-2 border border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 z-10 bg-gray-700 text-white"
+                        required
+                    />
+                    <button type="submit" className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition z-10">
+                        <Plus className="w-5 h-5" />
+                    </button>
+                    
+                    {showSuggestions && suggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-14 mt-1 bg-gray-700 border border-purple-800 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto">
+                            {suggestions.map((item, index) => (
+                                <div
+                                    key={index}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        handleSuggestionClick(item);
+                                    }} 
+                                    className="p-2 text-white cursor-pointer hover:bg-purple-900 transition duration-100"
+                                >
+                                    {item}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </form>
+            );
+        });
+
+
+        // --- MAIN APPLICATION COMPONENT ---
+        const App = () => {
+            const [appInitialized, setAppInitialized] = useState(false);
+            const [userId, setUserId] = useState(null);
+            const [db, setDb] = useState(null);
+            const [auth, setAuth] = useState(null);
+
+            const [pantryItems, setPantryItems] = useState([]); 
+            const [favorites, setFavorites] = useState([]); 
+            const [dislikedRecipes, setDislikedRecipes] = useState([]); 
+            const [planHistory, setPlanHistory] = useState([]); 
+            const [currentPlan, setCurrentPlan] = useState(null); 
+            
+            const [goals, setGoals] = useState({
+                calories: 2000,
+                protein: 100,
+                fat: 70,    
+                carbs: 225, 
+                days: 3,
+                dietary: 'None',
+                cuisine: 'Any',
+                planType: 'plan', // 'plan' or 'single_meal'
+                pantryOnly: false,
+            });
+            
+            const [isLoading, setIsLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [modalRecipe, setModalRecipe] = useState(null);
+            const [activeTab, setActiveTab] = useState('pantry'); 
+
+            // --- PAGE TITLE UPDATE ---
+            useEffect(() => {
+                document.title = "F.I.T. Meal Planner";
+            }, []);
+
+            // --- 1b. ACTIVE MACRO CALCULATION ---
+            const activeMacros = useMemo(() => {
+                if (goals.planType === 'plan') {
+                    return {
+                        calories: goals.calories,
+                        protein: goals.protein,
+                        fat: goals.fat,
+                        carbs: goals.carbs,
+                    };
+                } else {
+                    return {
+                        calories: Math.round(goals.calories / 3),
+                        protein: Math.round(goals.protein / 3),
+                        fat: Math.round(goals.fat / 3),
+                        carbs: Math.round(goals.carbs / 3),
+                    };
+                }
+            }, [goals.planType, goals.calories, goals.protein, goals.fat, goals.carbs]);
+
+
+            // --- 2. FIREBASE & AUTH INITIALIZATION ---
+            useEffect(() => {
+                // Import the legacy functions we need from the global firebase object
+                const getAuth = firebase.auth;
+                const getFirestore = firebase.firestore;
+                
+                // Firestore CRUD methods (must be redefined locally or accessed via global namespace/legacy methods)
+                const firestoreMethods = {
+                    collection: (db, path) => db.collection(path),
+                    onSnapshot: (q, cb, err) => q.onSnapshot(cb, err),
+                    addDoc: (ref, data) => ref.add(data),
+                    doc: (db, path, id) => db.collection(path).doc(id),
+                    deleteDoc: (docRef) => docRef.delete(),
+                    getDocs: (q) => q.get(),
+                    where: (field, op, value) => new firebase.firestore.FieldPath(field, op, value), // Basic compatibility fix
+                };
+                
+                try {
+                    // Initialize Firebase app
+                    const app = initializeApp(firebaseConfig);
+                    
+                    // Use legacy access methods to get service instances
+                    const firestoreInstance = app.firestore();
+                    const authInstance = app.auth();
+
+                    setDb(firestoreInstance);
+                    setAuth(authInstance);
+                    
+                    // Use legacy onAuthStateChanged
+                    const unsubscribe = authInstance.onAuthStateChanged(async (user) => {
+                        if (user) {
+                            setUserId(user.uid);
+                        } else {
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                // Use legacy signInWithCustomToken
+                                await authInstance.signInWithCustomToken(__initial_auth_token);
+                            } else {
+                                // Use legacy signInAnonymously
+                                const anonUser = await authInstance.signInAnonymously();
+                                setUserId(anonUser.user.uid);
+                            }
+                        }
+                        setAppInitialized(true);
+                    });
+
+                    // Store legacy functions needed for the rest of the application's CRUD logic
+                    // We attach them to the 'db' state object temporarily for use in handlers.
+                    setDb(prevDb => ({ 
+                        ...prevDb, 
+                        ...firestoreMethods, 
+                        _db: firestoreInstance // Keep the instance reference 
+                    }));
+
+
+                    return () => unsubscribe();
+                } catch (e) {
+                    console.error("Firebase initialization failed:", e);
+                    setError("Failed to initialize the application. Check console for details.");
+                }
+            }, []);
+
+            // --- 3. FIRESTORE LISTENERS (PANTRY, FAVORITES, DISLIKED, HISTORY) ---
+            useEffect(() => {
+                if (!db || !userId || !appInitialized) return;
+
+                const dbInstance = db._db; // Use the stored Firestore instance
+                
+                // Firestore CRUD methods from the global firebase object (or the stored methods in db state)
+                const { collection, onSnapshot, query, where } = firebase.firestore;
+
+
+                const pantryPath = `/artifacts/${appId}/users/${userId}/pantry`;
+                const favoritesPath = `/artifacts/${appId}/users/${userId}/favorites`;
+                const dislikedPath = `/artifacts/${appId}/users/${userId}/disliked_recipes`; 
+                const historyPath = `/artifacts/${appId}/users/${userId}/meal_plans`; 
+
+                // FIX: Use legacy collection and query methods
+                const pantryRef = dbInstance.collection(pantryPath);
+                const favoritesRef = dbInstance.collection(favoritesPath);
+                const dislikedRef = dbInstance.collection(dislikedPath);
+                const historyRef = dbInstance.collection(historyPath);
+
+
+                const unsubPantry = pantryRef.onSnapshot((snapshot) => {
+                    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setPantryItems(items);
+                }, (err) => { console.error("Pantry listener failed:", err); setError("Could not load pantry items in real-time."); });
+
+                const unsubFavorites = favoritesRef.onSnapshot((snapshot) => {
+                    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setFavorites(items);
+                }, (err) => { console.error("Favorites listener failed:", err); setError("Could not load favorite recipes in real-time."); });
+                
+                const unsubDisliked = dislikedRef.onSnapshot((snapshot) => {
+                    const names = snapshot.docs.map(doc => doc.data().recipeName);
+                    setDislikedRecipes(names);
+                }, (err) => { console.error("Disliked recipes listener failed:", err); setError("Could not load disliked recipes."); });
+
+                const unsubHistory = historyRef.onSnapshot((snapshot) => {
+                    const history = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    history.sort((a, b) => new Date(b.generatedAt) - new Date(a.generatedAt));
+
+                    setPlanHistory(history.map(item => ({
+                        ...item,
+                        generatedAt: new Date(item.generatedAt).toLocaleString()
+                    })));
+                }, (err) => { console.error("History listener failed:", err); setError("Could not load history."); });
+
+
+                return () => {
+                    unsubPantry();
+                    unsubFavorites();
+                    unsubDisliked();
+                    unsubHistory();
+                };
+            }, [db, userId, appInitialized]);
+
+            // --- 4. FIRESTORE CRUD ACTIONS ---
+
+            const handleAddPantryItem = useCallback(async (itemString) => { 
+                if (!db || !userId || !itemString.trim()) return;
+
+                const parts = itemString.trim().split(',');
+                let quantity = 'Some';
+                let name = itemString.trim();
+
+                if (parts.length > 1) {
+                    quantity = parts[0].trim() || 'Some';
+                    name = parts.slice(1).join(',').trim();
+                }
+
+                if (!name) return;
+
+                try {
+                    // Use legacy add and collection methods
+                    const itemRef = db._db.collection(`/artifacts/${appId}/users/${userId}/pantry`);
+                    await itemRef.add({ name, quantity, createdAt: new Date().toISOString() });
+                } catch (err) {
+                    console.error("Error adding pantry item:", err);
+                    setError("Failed to add item to pantry.");
+                }
+            }, [db, userId, appId]);
+
+            const handleRemovePantryItem = async (id) => {
+                if (!db || !userId) return;
+                try {
+                    // Use legacy doc/delete methods
+                    const itemRef = db._db.collection(`/artifacts/${appId}/users/${userId}/pantry`).doc(id);
+                    await itemRef.delete();
+                } catch (err) {
+                    console.error("Error removing pantry item:", err);
+                    setError("Failed to remove item from pantry.");
+                }
+            };
+
+            const handleSaveFavorite = async (recipe) => {
+                if (!db || !userId) return;
+                const favoritesCollectionRef = db._db.collection(`/artifacts/${appId}/users/${userId}/favorites`);
+                const isFavorited = favorites.some(fav => fav.recipeName === recipe.recipeName);
+
+                try {
+                    if (isFavorited) {
+                        const existingDoc = favorites.find(fav => fav.recipeName === recipe.recipeName);
+                        if (existingDoc) {
+                            await favoritesCollectionRef.doc(existingDoc.id).delete();
+                        }
+                    } else {
+                        // Use legacy set and doc methods
+                        const newDocRef = favoritesCollectionRef.doc();
+                        await newDocRef.set({ ...recipe, favoriteId: newDocRef.id, savedAt: new Date().toISOString() });
+                    }
+                    if (dislikedRecipes.includes(recipe.recipeName)) {
+                        // If favorited, remove from disliked list
+                        handleDislikeRecipe(recipe, true);
+                    }
+                } catch (err) {
+                    console.error("Error saving/removing favorite:", err);
+                    setError("Failed to update favorites.");
+                }
+            };
+
+            const handleDislikeRecipe = async (recipe, forceRemove = false) => { 
+                if (!db || !userId) return;
+                const dislikedCollectionRef = db._db.collection(`/artifacts/${appId}/users/${userId}/disliked_recipes`);
+                const isDisliked = dislikedRecipes.includes(recipe.recipeName);
+
+                try {
+                    if (isDisliked || forceRemove) {
+                        // Use legacy query methods to find and delete the document
+                        const q = dislikedCollectionRef.where("recipeName", "==", recipe.recipeName);
+                        const snapshot = await q.get();
+                        snapshot.forEach(doc => doc.ref.delete());
+
+                    } else {
+                        await dislikedCollectionRef.add({ recipeName: recipe.recipeName, dislikedAt: new Date().toISOString() });
+                    }
+                    if (!isDisliked && favorites.some(fav => fav.recipeName === recipe.recipeName)) {
+                        // If disliked, remove from favorites list
+                        handleSaveFavorite(recipe);
+                    }
+                } catch (err) {
+                    console.error("Error updating dislike status:", err);
+                    setError("Failed to update disliked recipes.");
+                }
+            };
+
+            const handleLoadHistoryPlan = (planData) => {
+                // Ensure plan is structured correctly for current rendering
+                const planWithIds = planData.plan.map(dayPlan => ({
+                    ...dayPlan,
+                    meals: dayPlan.meals.map(meal => ({
+                        ...meal,
+                        recipe: { ...meal.recipe, uid: crypto.randomUUID() } 
+                    }))
+                }));
+
+                setCurrentPlan(planWithIds);
+                setActiveTab('pantry'); 
+            }
+            
+            // --- 5. GEMINI API CALL FUNCTION ---
+            const generatePlan = async () => {
+                if (!appInitialized || isLoading) return;
+
+                setIsLoading(true);
+                setError(null);
+                setCurrentPlan(null);
+
+                const pantryList = pantryItems.map(item => `${item.quantity || 'some'} ${item.name}`).join(', ');
+                const pantryConstraint = goals.pantryOnly ? "STRICTLY use only these ingredients and DO NOT suggest new ones." : "Use these ingredients but you may suggest a few additional items.";
+                
+                const dislikedList = dislikedRecipes.join(', ');
+                const dislikeConstraint = dislikedList ? `You MUST NOT include any recipes matching these names: ${dislikedList}.` : '';
+
+                let userQuery = "";
+                let finalPlanData = null;
+                let responseSchema = null;
+                
+                const { calories, protein, fat, carbs } = activeMacros;
+
+                const recipeSchema = {
+                    type: "OBJECT",
+                    properties: {
+                        recipeName: { type: "STRING" },
+                        servings: { type: "NUMBER" },
+                        prepTimeMinutes: { type: "NUMBER" },
+                        cookTimeMinutes: { type: "NUMBER" },
+                        macros: {
+                            type: "OBJECT",
+                            properties: {
+                                calories: { type: "NUMBER" },
+                                proteinGrams: { type: "NUMBER" },
+                                fatGrams: { type: "NUMBER" },
+                                carbGrams: { type: "NUMBER" },
+                            },
+                            propertyOrdering: ["calories", "proteinGrams", "fatGrams", "carbGrams"]
+                        },
+                        ingredients: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    name: { type: "STRING" },
+                                    quantity: { type: "STRING" },
+                                },
+                                propertyOrdering: ["name", "quantity"]
+                            }
+                        },
+                        instructions: {
+                            type: "ARRAY",
+                            items: { type: "STRING" }
+                        }
+                    },
+                    propertyOrdering: ["recipeName", "servings", "prepTimeMinutes", "cookTimeMinutes", "macros", "ingredients", "instructions"]
+                };
+
+                if (goals.planType === 'plan') {
+                    userQuery = `
+                        Generate a ${goals.days}-day meal plan (3 meals/day: Breakfast, Lunch, Dinner). 
+                        Available Ingredients: [${pantryList || 'No items in pantry'}]. 
+                        ${pantryConstraint}
+                        ${dislikeConstraint}
+                        Daily Target Macros (Approximate): ${calories} Calories, ${protein}g Protein, ${fat}g Fat, and ${carbs}g Carbs. 
+                        Dietary Restrictions: ${goals.dietary}. Cuisine Preference: ${goals.cuisine}.
+                        Ensure high recipe variety and minimal food waste.
+                    `;
+                    
+                    responseSchema = {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                day: { type: "NUMBER", description: "The day number, starting from 1." },
+                                meals: { 
+                                    type: "ARRAY", 
+                                    items: {
+                                        type: "OBJECT",
+                                        properties: {
+                                            type: { type: "STRING", enum: ["Breakfast", "Lunch", "Dinner"] },
+                                            recipe: recipeSchema
+                                        },
+                                        propertyOrdering: ["type", "recipe"]
+                                    },
+                                    description: "Three meals: Breakfast, Lunch, Dinner."
+                                }
+                            },
+                            propertyOrdering: ["day", "meals"]
+                        }
+                    };
+                    
+                } else if (goals.planType === 'single_meal') {
+                    userQuery = `
+                        Generate ONE creative, healthy, and high-protein dinner recipe. 
+                        Available Ingredients: [${pantryList || 'No items in pantry'}]. 
+                        ${pantryConstraint}
+                        ${dislikeConstraint}
+                        Target Macros (Approximate): Around ${calories} Calories, ${protein}g Protein, ${fat}g Fat, and ${carbs}g Carbs.
+                        Dietary Restrictions: ${goals.dietary}. Cuisine Preference: ${goals.cuisine}.
+                        Do not return a plan structure, only the single recipe object.
+                    `;
+                    
+                    responseSchema = recipeSchema; 
+                }
+
+                const systemPrompt = "Act as a Certified Nutritionist and Professional Chef specializing in low-waste, quick meal prep. Your response must strictly follow the provided JSON schema. ONLY return the structured JSON data.";
+                
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: responseSchema
+                    }
+                };
+
+                try {
+                    const response = await fetchWithBackoff(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    
+                    let rawData;
+                    try {
+                        const jsonString = result.candidates[0].content.parts[0].text;
+                        rawData = JSON.parse(jsonString);
+                    } catch (parseError) {
+                        console.error("Failed to parse AI response JSON:", parseError, result);
+                        setError("AI generated an invalid plan format. Please try again.");
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    if (goals.planType === 'single_meal') {
+                        finalPlanData = [{
+                            day: 1,
+                            meals: [{
+                                type: "Dinner (Creative Meal)",
+                                recipe: rawData
+                            }]
+                        }];
+                    } else {
+                        finalPlanData = rawData;
+                    }
+                    
+                    // Save the generated plan to history
+                    const planCollectionRef = db._db.collection(`/artifacts/${appId}/users/${userId}/meal_plans`);
+                    await planCollectionRef.add({ 
+                        plan: finalPlanData,
+                        goals, 
+                        generatedAt: new Date().toISOString() 
+                    });
+
+                    // Add a temporary UID to each recipe for keying/favoriting in the UI
+                    const planWithIds = finalPlanData.map(dayPlan => ({
+                        ...dayPlan,
+                        meals: dayPlan.meals.map(meal => ({
+                            ...meal,
+                            recipe: { ...meal.recipe, uid: crypto.randomUUID() } 
+                        }))
+                    }));
+
+                    setCurrentPlan(planWithIds);
+
+                } catch (err) {
+                    console.error("Gemini API or network error:", err);
+                    setError("Could not generate plan. Check your connection or API status.");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            // --- 6. UTILITY FUNCTIONS ---
+            const generateShoppingList = () => {
+                if (!currentPlan) return [];
+
+                const requiredIngredients = {};
+                
+                currentPlan.forEach(dayPlan => {
+                    dayPlan.meals.forEach(meal => {
+                        meal.recipe.ingredients.forEach(ing => {
+                            // Normalize ingredient name for comparison
+                            const name = ing.name.toLowerCase();
+                            // Simple logic: just count how many times it's required (could be improved with quantity aggregation)
+                            requiredIngredients[name] = (requiredIngredients[name] || 0) + 1; 
+                        });
+                    });
+                });
+
+                const pantryNames = new Set(pantryItems.map(item => item.name.toLowerCase()));
+
+                const shoppingList = Object.keys(requiredIngredients)
+                    .filter(name => !pantryNames.has(name))
+                    .map(name => {
+                        // Find the quantity from the first recipe that used it (simplification)
+                        let quantity = 'Needed (Check recipe)'; 
+                        
+                        currentPlan.forEach(dayPlan => {
+                             dayPlan.meals.forEach(meal => {
+                                const matchedIng = meal.recipe.ingredients.find(ing => ing.name.toLowerCase() === name);
+                                if(matchedIng) {
+                                    quantity = matchedIng.quantity;
+                                }
+                             });
+                        });
+                        
+                        return {
+                            name: name.charAt(0).toUpperCase() + name.slice(1), 
+                            quantity: quantity
+                        };
+                    });
+
+                return shoppingList;
+            };
+
+            const shoppingList = generateShoppingList();
+
+            // --- 7. UI COMPONENTS ---
+
+            // A. Input Panel (Left Column / Top on Mobile)
+            const InputPanel = () => (
+                <div className="p-4 bg-gray-900 shadow-xl rounded-xl border border-gray-700">
+                    <h2 className="text-2xl font-bold mb-4 text-white flex items-center"><Goal className="w-6 h-6 mr-2 text-orange-500" /> Plan Goals & Options</h2>
+                    
+                    <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+                        
+                        {/* Plan Type Selector */}
+                        <div className="space-y-2 p-3 bg-gray-800 border border-purple-800 rounded-lg">
+                            <h3 className="text-md font-semibold text-purple-400">Mode Selection</h3>
+                            <div className="flex rounded-xl overflow-hidden shadow-md">
+                                <button
+                                    type="button"
+                                    onClick={() => setGoals(g => ({ ...g, planType: 'plan' }))}
+                                    className={`flex-1 py-2 text-center font-bold transition duration-150 ${goals.planType === 'plan' ? 'bg-purple-700 text-white shadow-inner shadow-purple-900/50' : 'bg-gray-900 text-purple-400 hover:bg-gray-700'}`}
+                                >
+                                    Full Meal Plan
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setGoals(g => ({ ...g, planType: 'single_meal' }))}
+                                    className={`flex-1 py-2 text-center font-bold transition duration-150 ${goals.planType === 'single_meal' ? 'bg-purple-700 text-white shadow-inner shadow-purple-900/50' : 'bg-gray-900 text-purple-400 hover:bg-gray-700'}`}
+                                >
+                                    Create a Single Meal
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Macro Goals & Days (Conditional) */}
+                        <div className="space-y-2 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                            
+                            {/* Display current mode title */}
+                            <h3 className="text-md font-semibold text-white border-b border-gray-700 pb-2 mb-2">
+                                {goals.planType === 'plan' ? `Daily Macro Goals` : `Single Meal Macro Target`}
+                            </h3>
+
+                            {goals.planType === 'plan' && (
+                                <>
+                                    <label className="block text-sm font-medium text-gray-300">Days to Plan: {goals.days}</label>
+                                    <select value={goals.days} onChange={(e) => setGoals({...goals, days: parseInt(e.target.value)})}
+                                            className="w-full p-2 border border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 mb-4 bg-gray-700 text-white">
+                                        {[1, 3, 5, 7].map(d => <option key={d} value={d}>{d} Day{d > 1 ? 's' : ''}</option>)}
+                                    </select>
+                                </>
+                            )}
+
+                            {/* Display ACTIVE macros, but control with GOALS */}
+                            <label className="block text-sm font-medium text-gray-300">Calories: {activeMacros.calories} {goals.planType === 'plan' ? '(Daily)' : '(Meal)'}</label>
+                            <input type="range" min="1200" max="3500" step="50" 
+                                   value={goals.calories} onChange={(e) => setGoals({...goals, calories: parseInt(e.target.value)})}
+                                   className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg [&::-webkit-slider-thumb]:bg-orange-500 [&::-moz-range-thumb]:bg-orange-500" />
+                            
+                            <label className="block text-sm font-medium text-gray-300">Protein (g): {activeMacros.protein} {goals.planType === 'plan' ? '(Daily)' : '(Meal)'}</label>
+                            <input type="range" min="30" max="250" step="5" 
+                                   value={goals.protein} onChange={(e) => setGoals({...goals, protein: parseInt(e.target.value)})}
+                                   className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg [&::-webkit-slider-thumb]:bg-orange-500 [&::-moz-range-thumb]:bg-orange-500" />
+
+                            {/* Daily Fat Slider */}
+                            <label className="block text-sm font-medium text-gray-300">Fat (g): {activeMacros.fat} {goals.planType === 'plan' ? '(Daily)' : '(Meal)'}</label>
+                            <input type="range" min="20" max="150" step="5" 
+                                   value={goals.fat} onChange={(e) => setGoals({...goals, fat: parseInt(e.target.value)})}
+                                   className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg [&::-webkit-slider-thumb]:bg-orange-500 [&::-moz-range-thumb]:bg-orange-500" />
+                            
+                            {/* Daily Carbs Slider */}
+                            <label className="block text-sm font-medium text-gray-300">Carbs (g): {activeMacros.carbs} {goals.planType === 'plan' ? '(Daily)' : '(Meal)'}</label>
+                            <input type="range" min="50" max="400" step="5" 
+                                   value={goals.carbs} onChange={(e) => setGoals({...goals, carbs: parseInt(e.target.value)})}
+                                   className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg [&::-webkit-slider-thumb]:bg-orange-500 [&::-moz-range-thumb]:bg-orange-500" />
+                        </div>
+
+                        {/* Pantry Only Checkbox */}
+                        <div className="flex items-center space-x-2 p-3 bg-orange-900/50 border border-orange-700 rounded-lg">
+                            <input
+                                type="checkbox"
+                                id="pantryOnly"
+                                checked={goals.pantryOnly}
+                                onChange={(e) => setGoals({...goals, pantryOnly: e.target.checked})}
+                                className="w-4 h-4 text-orange-500 bg-gray-700 border-orange-700 rounded focus:ring-orange-500"
+                            />
+                            <label htmlFor="pantryOnly" className="text-sm font-medium text-orange-300 flex items-center">
+                                <Package className="w-4 h-4 mr-1"/>
+                                Use **Pantry Items Only**
+                            </label>
+                        </div>
+
+                        {/* Dietary Filters */}
+                        <div className="space-y-2 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                            <h3 className="text-md font-semibold text-white">Dietary Filters</h3>
+                            <select value={goals.dietary} onChange={(e) => setGoals({...goals, dietary: e.target.value})}
+                                    className="w-full p-2 border border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 mb-2 bg-gray-700 text-white">
+                                <option value="None">No Restriction</option>
+                                <option value="Vegan">Vegan</option>
+                                <option value="Vegetarian">Vegetarian</option>
+                                <option value="Gluten-Free">Gluten-Free</option>
+                                <option value="Dairy-Free">Dairy-Free</option>
+                                <option value="Keto">Keto</option>
+                            </select>
+                            <select value={goals.cuisine} onChange={(e) => setGoals({...goals, cuisine: e.target.value})}
+                                    className="w-full p-2 border border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-gray-700 text-white">
+                                <option value="Any">Any Cuisine</option>
+                                <option value="Italian">Italian</option>
+                                <option value="Asian">Asian</option>
+                                <option value="Mexican">Mexican</option>
+                                <option value="Mediterranean">Mediterranean</option>
+                                <option value="Indian">Indian</option>
+                                <option value="American">American (BBQ, Southern, Comfort)</option> 
+                                <option value="African">African</option> 
+                            </select>
+                        </div>
+                    </form>
+
+                    {/* Action Button */}
+                    <button 
+                        onClick={generatePlan} 
+                        disabled={isLoading || !appInitialized}
+                        className={`w-full mt-6 py-3 px-4 text-white font-bold rounded-xl shadow-lg transition duration-150 ease-in-out ${isLoading || !appInitialized 
+                            ? 'bg-gray-700 cursor-not-allowed' 
+                            : 'bg-orange-600 hover:bg-orange-700 active:bg-orange-800 hover:shadow-xl'
+                        } flex items-center justify-center`}
+                    >
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                Generating Personalized Meal...
+                            </>
+                        ) : (
+                            <>
+                                <Zap className="w-5 h-5 mr-2" />
+                                {goals.planType === 'plan' ? 'Generate Personalized Plan' : 'Generate Single Meal'}
+                            </>
+                        )}
+                    </button>
+                    {error && <p className="text-orange-400 text-sm mt-3 text-center">{error}</p>}
+                </div>
+            );
+
+            // B. Plan View (Center / Middle on Mobile)
+            const PlanView = () => (
+                <div className="p-4 bg-gray-800 rounded-xl shadow-inner min-h-full border border-gray-700">
+                    <h2 className="text-2xl font-bold mb-4 text-white flex items-center">
+                        <Soup className="w-6 h-6 mr-2 text-purple-500" /> 
+                        {currentPlan && currentPlan.length === 1 && currentPlan[0].meals.length === 1 ? 'Generated Meal' : `Meal Plan (${currentPlan ? currentPlan.length : 0} Days)`}
+                    </h2>
+
+                    {!currentPlan && !isLoading && (
+                        <div className="p-8 text-center bg-gray-900 rounded-xl shadow border border-purple-900">
+                            <Utensils className="w-12 h-12 mx-auto text-gray-700 mb-4" />
+                            <p className="text-gray-400">
+                                Use the **Plan Goals & Options** panel to set your dietary needs and the **Pantry & Tools** panel to list your ingredients, then hit the "Generate" button!
+                            </p>
+                        </div>
+                    )}
+
+                    {currentPlan && currentPlan.map((dayPlan) => (
+                        <div key={dayPlan.day} className="mb-6 p-4 bg-gray-900 rounded-xl shadow-lg border border-purple-800">
+                            <h3 className="text-xl font-semibold mb-3 text-white border-b border-gray-700 pb-2">
+                                {currentPlan.length > 1 ? `Day ${dayPlan.day}` : dayPlan.meals[0].type}
+                            </h3>
+                            {dayPlan.meals.map((meal, index) => (
+                                <div key={index} className="flex justify-between items-center p-3 my-2 border border-gray-800 rounded-lg hover:bg-purple-900 transition duration-150">
+                                    <div className="flex-grow">
+                                        {currentPlan.length > 1 && (
+                                            <p className="text-sm font-medium text-purple-400">{meal.type}</p>
+                                        )}
+                                        <p className="text-lg font-bold text-white truncate">{meal.recipe.recipeName}</p>
+                                    </div>
+                                    <div className="text-right ml-4">
+                                        <p className="text-sm font-semibold text-orange-500">{meal.recipe.macros.calories} Cal</p>
+                                        <button 
+                                            onClick={() => setModalRecipe(meal.recipe)}
+                                            className="text-xs text-orange-400 hover:text-orange-600 transition duration-150"
+                                        >
+                                            Details
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            );
+
+            // C. Utility Panel (Right Column / Bottom on Mobile)
+            const UtilityPanel = () => (
+                <div className="p-4 bg-gray-900 shadow-xl rounded-xl space-y-6 border border-gray-700">
+                    <h2 className="text-2xl font-bold mb-4 text-white flex items-center"><Package className="w-6 h-6 mr-2 text-purple-600" /> Pantry & Tools</h2>
+                    
+                    {/* Tabs for Pantry, Shopping List, Favorites, History */}
+                    <div className="flex border-b border-gray-700 overflow-x-auto">
+                        <button 
+                            className={`py-2 px-4 text-sm font-medium transition duration-150 ${activeTab === 'pantry' ? 'border-b-2 border-orange-500 text-orange-400' : 'text-gray-400 hover:text-white'}`}
+                            onClick={() => setActiveTab('pantry')}
+                        >
+                            Pantry
+                        </button>
+                        <button 
+                            className={`py-2 px-4 text-sm font-medium transition duration-150 ${activeTab === 'shopping' ? 'border-b-2 border-orange-500 text-orange-400' : 'text-gray-400 hover:text-white'}`}
+                            onClick={() => setActiveTab('shopping')}
+                        >
+                            Shopping
+                        </button>
+                        <button 
+                            className={`py-2 px-4 text-sm font-medium transition duration-150 ${activeTab === 'favorites' ? 'border-b-2 border-orange-500 text-orange-400' : 'text-gray-400 hover:text-white'}`}
+                            onClick={() => setActiveTab('favorites')}
+                        >
+                            Favorites
+                        </button>
+                        <button 
+                            className={`py-2 px-4 text-sm font-medium transition duration-150 ${activeTab === 'history' ? 'border-b-2 border-orange-500 text-orange-400' : 'text-gray-400 hover:text-white'}`}
+                            onClick={() => setActiveTab('history')}
+                        >
+                            <History className="inline w-4 h-4 mr-1"/> History
+                        </button>
+                    </div>
+
+                    {/* Pantry Manager Content */}
+                    {activeTab === 'pantry' && (
+                        <div className="space-y-4">
+                            {/* Using the Autocomplete component and passing the submission handler */}
+                            <PantryInputWithAutocomplete 
+                                onAddItem={handleAddPantryItem}
+                            />
+                            
+                            {/* CLARIFICATION NOTE ADDED HERE */}
+                            <p className="text-xs text-gray-500 pt-1">
+                                **Tip:** The planner can use **any item** you enter, even if it doesn't appear in the suggestion list!
+                            </p>
+
+
+                            <div className="h-48 overflow-y-auto border border-gray-700 rounded-lg p-3 bg-gray-800">
+                                {pantryItems.length === 0 ? (
+                                    <p className="text-gray-600 text-center py-4">Your pantry is empty. Use the input above to add ingredients!</p>
+                                ) : (
+                                    pantryItems.map(item => (
+                                        <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-b-0">
+                                            {/* Updated display order to be Item (Quantity) */}
+                                            <span className="text-white">{item.name} <span className="text-sm font-semibold text-orange-500">({item.quantity})</span></span>
+                                            <button onClick={() => handleRemovePantryItem(item.id)} className="text-purple-400 hover:text-purple-600 transition">
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Shopping List Content */}
+                    {activeTab === 'shopping' && (
+                        <div className="space-y-4">
+                            <p className="text-sm text-gray-400">This list includes ingredients for the active plan that are *not* currently in your pantry.</p>
+                            <div className="h-48 overflow-y-auto border border-gray-700 rounded-lg p-3 bg-gray-800">
+                                {currentPlan === null ? (
+                                    <p className="text-gray-600 text-center py-4">Generate a plan first to see your shopping list.</p>
+                                ) : shoppingList.length === 0 ? (
+                                    <p className="text-orange-500 text-center py-4 font-semibold">You have all the ingredients! Happy cooking!</p>
+                                ) : (
+                                    shoppingList.map((item, index) => (
+                                        <div key={index} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-b-0">
+                                            <span className="text-white">{item.name}</span>
+                                            <span className="text-sm font-medium text-purple-400">{item.quantity}</span>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Favorites Content */}
+                    {activeTab === 'favorites' && (
+                        <div className="space-y-4">
+                            <div className="h-48 overflow-y-auto border border-gray-700 rounded-lg p-3 bg-gray-800">
+                                {favorites.length === 0 ? (
+                                    <p className="text-gray-600 text-center py-4">No favorite recipes yet. Click the <Heart className="inline w-4 h-4 text-orange-400"/> icon in the recipe details to save one!</p>
+                                ) : (
+                                    favorites.map(recipe => (
+                                        <div key={recipe.id} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-b-0 hover:bg-purple-900 transition duration-150">
+                                            <span className="text-white font-medium truncate">{recipe.recipeName}</span>
+                                            <div className="flex items-center space-x-2">
+                                                <p className="text-xs text-orange-500">{recipe.macros.calories} Cal</p>
+                                                <button 
+                                                    onClick={() => setModalRecipe(recipe)}
+                                                    className="text-purple-400 hover:text-purple-600 transition duration-150 text-sm"
+                                                >
+                                                    View
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* History Content */}
+                    {activeTab === 'history' && (
+                        <div className="space-y-4">
+                            <p className="text-sm text-gray-400">View and load your previous meal plans.</p>
+                            <div className="h-48 overflow-y-auto border border-gray-700 rounded-lg p-3 bg-gray-800">
+                                {planHistory.length === 0 ? (
+                                    <p className="text-gray-600 text-center py-4">No history found. Generate your first plan!</p>
+                                ) : (
+                                    planHistory.map((planData) => (
+                                        <div key={planData.id} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-b-0 hover:bg-purple-900 transition duration-150">
+                                            <div className="text-sm text-white">
+                                                <p className="font-semibold">{planData.plan.length > 1 ? `${planData.plan.length}-Day Plan` : 'Single Meal'}</p>
+                                                <p className="text-xs text-gray-500">{planData.generatedAt}</p>
+                                            </div>
+                                            <button 
+                                                onClick={() => handleLoadHistoryPlan(planData)}
+                                                className="text-orange-400 hover:text-orange-600 transition duration-150 text-sm font-medium px-2 py-1 border border-purple-800 rounded-lg"
+                                            >
+                                                Load Plan
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+
+            // D. Recipe Detail Modal
+            const RecipeDetailModal = () => {
+                if (!modalRecipe) return null;
+                
+                const [scaledServings, setScaledServings] = useState(modalRecipe.servings);
+                const isFavorited = favorites.some(fav => fav.recipeName === modalRecipe.recipeName);
+                const isDisliked = dislikedRecipes.includes(modalRecipe.recipeName);
+
+                // Simple scaling logic (does not handle complex unit math, but demonstrates the feature)
+                const scaleFactor = scaledServings / modalRecipe.servings;
+                
+                const scaledIngredients = modalRecipe.ingredients.map(item => {
+                    // Placeholder: real scaling would be complex (e.g., 2 cups * 1.5 = 3 cups)
+                    // We just append the scale factor conceptually here.
+                    return {
+                        ...item,
+                        scaledQuantity: `${item.quantity} (x${scaleFactor.toFixed(1)})`
+                    }
+                });
+
+                // Simple macro scaling
+                const scaledMacros = {
+                    calories: (modalRecipe.macros.calories * scaleFactor).toFixed(0),
+                    proteinGrams: (modalRecipe.macros.proteinGrams * scaleFactor).toFixed(0),
+                    fatGrams: (modalRecipe.macros.fatGrams * scaleFactor).toFixed(0),
+                    carbGrams: (modalRecipe.macros.carbGrams * scaleFactor).toFixed(0),
+                };
+
+                return (
+                    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" onClick={() => setModalRecipe(null)}>
+                        <div 
+                            className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 border border-purple-800" 
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="p-6">
+                                {/* Header and Close Button */}
+                                <div className="flex justify-between items-start border-b border-gray-700 pb-4 mb-4">
+                                    <h3 className="text-3xl font-extrabold text-white">{modalRecipe.recipeName}</h3>
+                                    <button 
+                                        onClick={() => setModalRecipe(null)} 
+                                        className="text-gray-500 hover:text-white transition"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+                                
+                                {/* Action Bar (Updated with Dislike Button) */}
+                                <div className="flex flex-wrap gap-4 mb-4 items-center">
+                                    <button 
+                                        onClick={() => handleSaveFavorite(modalRecipe)}
+                                        className={`flex items-center text-sm font-medium p-2 rounded-full transition ${isFavorited ? 'bg-orange-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-orange-900 hover:text-orange-400'}`}
+                                    >
+                                        <Heart className="w-5 h-5 mr-1" fill={isFavorited ? "white" : "none"} />
+                                        {isFavorited ? 'Remove Favorite' : 'Save to Favorites'}
+                                    </button>
+                                    
+                                    {/* Dislike Button */}
+                                    <button 
+                                        onClick={() => handleDislikeRecipe(modalRecipe)}
+                                        className={`flex items-center text-sm font-medium p-2 rounded-full transition ${isDisliked ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-300 hover:bg-purple-900'}`}
+                                    >
+                                        <Ban className="w-5 h-5 mr-1" fill={isDisliked ? "white" : "none"} />
+                                        {isDisliked ? 'Eliminated (Unban)' : 'Eliminate Recipe'}
+                                    </button>
+
+                                    <div className="flex items-center text-sm font-medium text-gray-400">
+                                        <Clock className="w-4 h-4 mr-1 text-purple-400" />
+                                        Prep: {modalRecipe.prepTimeMinutes} min | Cook: {modalRecipe.cookTimeMinutes} min
+                                    </div>
+                                </div>
+
+                                {/* Scaling Control */}
+                                <div className="flex items-center space-x-3 mb-6 p-4 bg-gray-800 border border-orange-700 rounded-xl">
+                                    <Scale className="w-5 h-5 text-orange-500 flex-shrink-0" />
+                                    <label htmlFor="servings" className="text-md font-semibold text-gray-300">Scale Servings:</label>
+                                    <input 
+                                        id="servings"
+                                        type="number" 
+                                        min="1" 
+                                        step="1"
+                                        value={scaledServings} 
+                                        onChange={(e) => setScaledServings(Math.max(1, parseInt(e.target.value)))}
+                                        className="w-20 p-2 border border-orange-700 rounded-lg text-center focus:ring-orange-500 bg-gray-700 text-white" 
+                                    />
+                                    <span className="text-gray-400">Current: {scaledServings} servings</span>
+                                </div>
+                                
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {/* Ingredients */}
+                                    <div className="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
+                                        <h4 className="text-xl font-bold mb-3 text-white">Ingredients (Scaled)</h4>
+                                        <ul className="space-y-2">
+                                            {scaledIngredients.map((item, index) => (
+                                                <li key={index} className="flex justify-between text-gray-300 border-b border-gray-700 pb-1">
+                                                    <span className="font-medium">{item.name}</span>
+                                                    <span className="text-orange-500 font-semibold">{item.scaledQuantity}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Instructions */}
+                                    <div className="p-4 rounded-xl shadow bg-gray-800 border border-gray-700">
+                                        <h4 className="text-xl font-bold mb-3 text-white">Instructions</h4>
+                                        <ol className="list-decimal list-inside space-y-3">
+                                            {modalRecipe.instructions.map((step, index) => (
+                                                <li key={index} className="text-gray-300 pl-1">{step}</li>
+                                            ))}
+                                        </ol>
+                                    </div>
+                                </div>
+                                
+                                {/* Nutritional Summary */}
+                                <div className="mt-6 p-4 bg-purple-900/50 rounded-xl shadow-inner border border-purple-700">
+                                    <h4 className="text-xl font-bold mb-3 text-purple-300">Nutritional Facts (Scaled Total)</h4>
+                                    <div className="grid grid-cols-4 gap-4 text-center">
+                                        {Object.entries(scaledMacros).map(([key, value]) => (
+                                            <div key={key} className="p-2 bg-gray-900 rounded-lg shadow-sm border border-purple-800">
+                                                <p className="text-2xl font-extrabold text-orange-500">{value}</p>
+                                                <p className="text-xs text-gray-400 font-medium capitalize">{key.replace('Grams', ' (g)')}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+
+            // --- 8. MAIN RENDER ---
+            return (
+                <div className="min-h-screen bg-gray-900 antialiased font-sans">
+                    <style>
+                        {`
+                            /* Custom Scrollbar for better UX */
+                            .overflow-y-auto::-webkit-scrollbar {
+                                width: 8px;
+                            }
+                            .overflow-y-auto::-webkit-scrollbar-thumb {
+                                background-color: #8B5CF6; /* Tailwind purple-500 */
+                                border-radius: 10px;
+                            }
+                            .overflow-y-auto::-webkit-scrollbar-track {
+                                background: #1f2937; /* Tailwind gray-800 */
+                            }
+                        `}
+                    </style>
+                    
+                    <header className="bg-gray-800 shadow-lg sticky top-0 z-10 border-b border-purple-900">
+                        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                            {/* UPDATED H1 with Logo and New Title */}
+                            <h1 className="text-xl sm:text-3xl font-extrabold text-purple-400 flex items-center">
+                                {/* Placeholder Logo Image */}
+                                <img 
+                                    src="https://placehold.co/40x40/5A2D81/ffffff?text=F.I.T." 
+                                    alt="F.I.T. Logo" 
+                                    className="w-8 h-8 sm:w-10 sm:h-10 mr-2 rounded-full border-2 border-orange-500 shadow-md"
+                                />
+                                <span className="text-white">F.I.T. </span>
+                                <span className="text-orange-500 ml-1">Meal Planner</span>
+                            </h1>
+                            <div className="text-xs text-right text-gray-500">
+                                {appInitialized ? (
+                                    <>
+                                        <p className="font-bold text-orange-500">User ID:</p>
+                                        <p className="truncate w-32 sm:w-auto">{userId}</p>
+                                    </>
+                                ) : (
+                                    <p className="text-purple-400 flex items-center"><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Initializing...</p>
+                                )}
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                        <div className="px-4 py-6 sm:p-0">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Column 1: Input Panel (always visible for control) */}
+                                <div className="lg:col-span-1">
+                                    <InputPanel />
+                                </div>
+                                
+                                {/* Column 2: Plan View (main content) */}
+                                <div className="lg:col-span-1 min-h-full">
+                                    <PlanView />
+                                </div>
+
+                                {/* Column 3: Utility Panel (pantry/shopping list/history) */}
+                                <div className="lg:col-span-1">
+                                    <UtilityPanel />
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+
+                    {/* Recipe Detail Modal (renders over everything) */}
+                    <RecipeDetailModal />
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+    <!-- Include Firebase SDKs after the React code, using UMD bundles -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </body>
 </html>
